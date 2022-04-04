@@ -17,12 +17,60 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV USER aisky
-ENV ZDOTDIR /home/${USER}/.zsh
-# for github ssh connection
-COPY .ssh/ /home/${USER}/.ssh/
+# create conda envs
+# (update and install should be in the same instruction not to use old cache)
+RUN conda update -n base -c defaults conda && \
+    # add conda-forge channel
+    conda config --append channels conda-forge && \
+    # create env python3.9 (tensorflow does not support 3.10 yet)
+    conda create -n python3.9 python=3.9
+
+# install packages to python3.9
+SHELL ["conda", "run", "-n", "python3.9", "/bin/bash", "-c"]
+RUN conda install -y \
+    # from default
+    flake8 \
+    nltk \
+    numpy \
+    matplotlib \
+    pandas \
+    scipy \
+    seaborn \
+    # from conda-forge
+    albumentations \
+    kaggle \
+    jupyterlab \
+    scikit-learn \
+    tensorflow \
+    timm && \
+    # others
+    conda install -y pytorch torchvision torchaudio cpuonly -c pytorch
+
+RUN conda install -y \
+    missingno \
+    tqdm && \
+    conda install -y plotly -c plotly
+
+# initialize conda in zsh
+RUN conda init zsh
+
+# create the user
+ARG USERNAME=aiskay
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid ${USER_GID} ${USERNAME} && \
+    useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} 
+    # Add sudo support
+    # echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
+    # chmod 0440 /etc/sudoers.d/$USERNAME
+
+USER aiskay
+# system environment variables can only be used in RUN, CMD, ENTRYPOINT
+ARG HOME=/home/${USERNAME}
 
 # shell settings (prezto)
+ENV ZDOTDIR ${HOME}/.zsh
 SHELL [ "/bin/zsh", "-c" ]
 RUN git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto" && \
     setopt EXTENDED_GLOB && \
@@ -30,41 +78,6 @@ RUN git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR
         ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"; \
     done
 
-# update conda
-RUN conda update -n base -c defaults conda
-# add conda-forge channel
-RUN conda config --append channels conda-forge
-
-# create env python3.9 (tensorflow does not support 3.10 yet)
-RUN conda create -n python3.9 python=3.9
-SHELL ["conda", "run", "-n", "python3.9", "/bin/bash", "-c"]
-# install main packages seperately
-RUN conda install -y \
-    # from default
-    numpy \
-    scipy \
-    pandas \
-    matplotlib \
-    seaborn \
-    flake8 \
-    # from conda-forge
-    kaggle \
-    jupyterlab \
-    scikit-learn \
-    tensorflow && \
-    # others
-    conda install pytorch torchvision torchaudio cpuonly -c pytorch
-
-RUN conda install -y \
-    timm \
-    albumentations \
-    nltk \
-    tqdm && \
-    conda install plotly -c plotly
-
-# initialize conda in zsh
-RUN conda init zsh
-
 # for kaggle-api
-COPY .kaggle/ /home/${USER}/.kaggle/
-ENV KAGGLE_CONFIG_DIR /home/${USER}/.kaggle/
+COPY .kaggle/ ${HOME}/.kaggle/
+ENV KAGGLE_CONFIG_DIR ${HOME}/.kaggle/

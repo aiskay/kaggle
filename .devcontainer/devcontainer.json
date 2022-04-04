@@ -11,7 +11,8 @@
 
     // Set *default* container specific settings.json values on container create.
     "settings": {
-        "python.linting.flake8Enabled": true
+        "python.linting.flake8Enabled": true,
+        "git.ignoreLimitWarning": true
     },
 
     // Add the IDs of extensions you want installed when the container is created.
@@ -38,8 +39,8 @@
     // "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ],
 
     // Uncomment to connect as a non-root user if you've added one. See https://aka.ms/vscode-remote/containers/non-root.
-    // "remoteUser": "vscode"
+    "remoteUser": "aiskay",
 
-    "workspaceMount": "source=${localWorkspaceFolder}/competitions,target=/home/aisky/competitions,type=bind",
-    "workspaceFolder": "/home/aisky",
+    "workspaceMount": "source=${localWorkspaceFolder}/competitions,target=/home/aiskay/competitions,type=bind",
+    "workspaceFolder": "/home/aiskay",
 }
