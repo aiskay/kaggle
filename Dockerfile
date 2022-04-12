@@ -7,13 +7,15 @@ RUN apt update && \
     apt install -y --no-install-recommends \
     build-essential \
     git-all \
-    zsh \
-    vim \
+    less \
+    npm \
     openssh-client \
-    wget \
-    unzip \
     procps \
-    npm && \
+    unzip \
+    sudo \
+    vim \
+    wget \
+    zsh && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -39,7 +41,10 @@ RUN conda install -y \
     # from conda-forge
     albumentations \
     kaggle \
+    ipywidgets \
     jupyterlab \
+    lightgbm \
+    optuna \
     scikit-learn \
     tensorflow \
     timm && \
@@ -47,31 +52,33 @@ RUN conda install -y \
     conda install -y pytorch torchvision torchaudio cpuonly -c pytorch
 
 RUN conda install -y \
+    category_encoders \
     missingno \
     tqdm && \
     conda install -y plotly -c plotly
 
 # initialize conda in zsh
+SHELL [ "/bin/bash", "-c" ]
 RUN conda init zsh
 
 # create the user
 ARG USERNAME=aiskay
-ARG USER_UID=1000
+ARG USER_UID=2000
 ARG USER_GID=$USER_UID
 
 RUN groupadd --gid ${USER_GID} ${USERNAME} && \
-    useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} 
+    useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} && \
     # Add sudo support
-    # echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
-    # chmod 0440 /etc/sudoers.d/$USERNAME
+    echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME
 
 USER aiskay
 # system environment variables can only be used in RUN, CMD, ENTRYPOINT
 ARG HOME=/home/${USERNAME}
 
 # shell settings (prezto)
-ENV ZDOTDIR ${HOME}/.zsh
 SHELL [ "/bin/zsh", "-c" ]
+ENV ZDOTDIR ${HOME}/.zsh
 RUN git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto" && \
     setopt EXTENDED_GLOB && \
     for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/^README.md(.N); do \
