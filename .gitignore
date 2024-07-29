@@ -12,7 +12,6 @@
 *.vsix
 
 ## custom sources
-.ssh/*
 .kaggle/*
 !.gitkeep
 competitions/*
