@@ -1,9 +1,9 @@
 This is the base image for kaggle competitions on Linux with
 
-- miniconda 
+- mambaforge
 - Visual Studio Code
 
-I use `flake8` as the python linter referencing [2021年Python開発リンター導入のベストプラクティス](https://zenn.dev/yhay81/articles/yhay81-202102-pythonlint).
+I use [Ruff](https://github.com/astral-sh/ruff) as the python linter.
 
 # Usage
 
